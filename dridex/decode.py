@@ -4,8 +4,8 @@
 # description       : Extracts URLs from Dridex loader Excel documents
 # author            : @stoerchl
 # email             : patrick.schlapfer@hp.com
-# date              : 20210127
-# version           : 1.1
+# date              : 20210201
+# version           : 1.2
 # usage             : python decode.py -d <directory_to_search>
 # license           : MIT
 # py version        : 3.9.1
@@ -159,11 +159,11 @@ try:
 
             workbook = openpyxl.load_workbook(str(f), read_only=True)
             found_urls = False
+            worksheet_data = list()
             for worksheet in workbook.worksheets:
                 try:
                     rows = worksheet.rows
-                    first_row = [cell.value for cell in next(rows)]
-
+                    
                     reverse_encoding_dict = dict()
                     char_offset_output = ""
                     char_minus_output = ""
@@ -171,12 +171,14 @@ try:
                     substring_concat_encoding_output = ""
                     format_encoding_output = ""
                     hex_encoding_output = ""
-
+                    
+                    worksheet_content = ""
                     for row in rows:
-                        for key, cell in zip(first_row, row):
+                        for cell in row:
                             format_encoding_output = format_encoding(format_encoding_output, cell)
                             if cell.value:
                                 cell_value = cell.value
+                                worksheet_content += cell_value
                                 char_minus_output = char_minus_encoding(char_minus_output, cell_value)
                                 reverse_encoding_dict = reverse_encoding(reverse_encoding_dict, cell)
                                 scramle_encoding_output = scramle_encoding(scramle_encoding_output, cell_value, 1)
@@ -185,7 +187,8 @@ try:
                                 substring_concat_encoding_output = substring_concat_encoding(substring_concat_encoding_output, cell_value)
                                 hex_encoding_output = hex_encoding(hex_encoding_output, cell_value)
                                 char_offset_output = char_offset_encoding(char_offset_output, cell_value)
-
+                                
+                    worksheet_data.append(worksheet_content)
                     found_urls += get_reverse_encoding(reverse_encoding_dict)
 
                     total_output = char_minus_output + "$" + \
@@ -199,6 +202,15 @@ try:
                 except Exception as ex:
                     pass # don't worry, be happy.
 
+            url_output = ""
+            try:
+                for char_off in range(0, len(worksheet_data[len(worksheet_data)-1])):
+                    for ws in range(len(worksheet_data)-1, 0, -1):
+                        url_output += worksheet_data[ws][char_off]
+                found_urls += extract_decoded_urls(url_output)
+            except:
+                pass # no multi-worksheet encoding used.
+            
             if found_urls:
                 print("ok - " + str(f))
             else:
