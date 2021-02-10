@@ -205,7 +205,7 @@ try:
             url_output = ""
             try:
                 for char_off in range(0, len(worksheet_data[len(worksheet_data)-1])):
-                    for ws in range(len(worksheet_data)-1, 0, -1):
+                    for ws in range(len(worksheet_data)-1, 1, -1):
                         url_output += worksheet_data[ws][char_off]
                 found_urls += extract_decoded_urls(url_output)
             except:
