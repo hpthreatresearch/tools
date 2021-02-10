@@ -4,8 +4,8 @@
 # description       : Extracts URLs from Dridex loader Excel documents
 # author            : @stoerchl
 # email             : patrick.schlapfer@hp.com
-# date              : 20210201
-# version           : 1.2
+# date              : 20210210
+# version           : 1.3
 # usage             : python decode.py -d <directory_to_search>
 # license           : MIT
 # py version        : 3.9.1
@@ -202,13 +202,17 @@ try:
                 except Exception as ex:
                     pass # don't worry, be happy.
 
-            url_output = ""
             try:
-                for char_off in range(0, len(worksheet_data[len(worksheet_data)-1])):
-                    for ws in range(len(worksheet_data)-1, 1, -1):
-                        url_output += worksheet_data[ws][char_off]
-                found_urls += extract_decoded_urls(url_output)
-            except:
+                for ws_nr in range(len(worksheet_data)-2, -1, -1):
+                    url_output = ""
+                    for char_off in range(0, len(worksheet_data[len(worksheet_data)-1])):
+                        for ws in range(len(worksheet_data)-1, ws_nr, -1):
+                            url_output += worksheet_data[ws][char_off]
+                    found_urls += extract_decoded_urls(url_output)
+                    if found_urls:
+                        break
+
+            except Exception as e:
                 pass # no multi-worksheet encoding used.
             
             if found_urls:
