@@ -4,8 +4,8 @@
 # description       : Extracts URLs from Dridex loader Excel documents
 # author            : @stoerchl
 # email             : patrick.schlapfer@hp.com
-# date              : 20210218
-# version           : 1.4
+# date              : 20210301
+# version           : 1.5
 # usage             : python decode.py -d <directory_to_search>
 # license           : MIT
 # py version        : 3.9.1
@@ -136,6 +136,23 @@ def hex_encoding(hex_encoding_output, val):
         pass
     return hex_encoding_output
 
+def divided_encoding(divided_encoding_output, val):
+    try:
+        middle = len(val) / 2
+        divided_encoding_temp = ""
+        divided_encoding_output = ""
+
+        for i in range(0, int(middle)):
+            divided_encoding_temp += val[i:i+1] + val[int(middle)+i:int(middle)+i+1]
+
+        for i in range(0, int(middle)):
+            divided_encoding_output += divided_encoding_temp[i:i+1] + divided_encoding_temp[int(middle)+i:int(middle)+i+1]
+
+        divided_encoding_output = "https://" + divided_encoding_output.replace("XX", "$https://")
+    except:
+        pass
+    return divided_encoding_output
+
 # Regex Source: https://stackoverflow.com/questions/839994/extracting-a-url-in-python
 def extract_decoded_urls(content):
     try:
@@ -176,6 +193,7 @@ try:
                     substring_concat_encoding_output = ""
                     format_encoding_output = ""
                     hex_encoding_output = ""
+                    divided_encoding_output = ""
                     
                     worksheet_content = ""
                     for row in rows:
@@ -192,6 +210,7 @@ try:
                                 substring_concat_encoding_output = substring_concat_encoding(substring_concat_encoding_output, cell_value)
                                 hex_encoding_output = hex_encoding(hex_encoding_output, cell_value)
                                 char_offset_output = char_offset_encoding(char_offset_output, cell_value)
+                                divided_encoding_output = divided_encoding(divided_encoding_output, cell_value)
                                 
                     worksheet_data.append(worksheet_content)
                     found_urls += get_reverse_encoding(reverse_encoding_dict)
@@ -201,7 +220,8 @@ try:
                         substring_concat_encoding_output + "$" + \
                         format_encoding_output + "$" + \
                         hex_encoding_output + "$" + \
-                        char_offset_output
+                        char_offset_output + "$" + \
+                        divided_encoding_output
                     found_urls += extract_decoded_urls(total_output)
 
                 except Exception as ex:
