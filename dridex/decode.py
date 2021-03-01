@@ -148,7 +148,7 @@ def divided_encoding(divided_encoding_output, val):
         for i in range(0, int(middle)):
             divided_encoding_output += divided_encoding_temp[i:i+1] + divided_encoding_temp[int(middle)+i:int(middle)+i+1]
 
-        divided_encoding_output = "https://" + divided_encoding_output.replace("XX", "$https://")
+        divided_encoding_output = "https://" + re.sub("([A-Z]{2})", "$https://", divided_encoding_output)
     except:
         pass
     return divided_encoding_output
