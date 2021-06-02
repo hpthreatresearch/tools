@@ -2,7 +2,7 @@ rule js_downloader_gootloader : downloader
 {
   meta:
     description = "JavaScript downloader known to deliver Gootkit or REvil ransomware"
-    author = "HP Threat Research @HP_Security"
+    author = "HP Threat Research @HPSecurity"
     filetype = "JavaScript"
     maltype = "Downloader"
     date = "2021-02-22"
