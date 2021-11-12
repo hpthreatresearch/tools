@@ -4,8 +4,8 @@
 # description       : Extracts URLs from Gootloader JavaScript
 # author            : @stoerchl
 # email             : patrick.schlapfer@hp.com
-# date              : 20210222
-# version           : 1.0
+# date              : 20211111
+# version           : 2.0
 # usage             : python decode.py -d <directory_to_search>
 # license           : MIT
 # py version        : 3.9.1
@@ -40,7 +40,10 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+functions_regex = r"^function[ \t]+\w+[ \t]*\([\w+, \t]*\)[ \t]*{.+}[ \t]*$"
 code_regex = r"(?<!\\)(?:\\\\)*'([^'\\]*(?:\\.[^'\\]*)*)'"
+ext_code_regex = r"(\w+)\s*=\s*(?<!\\)(?:\\\\)*'([^'\\]*(?:\\.[^'\\]*)*)'"
+code_order = r"\=\s*((?:\w+\+){NUM_REP}(?:\w+));"
 breacket_regex = "\[(.*?)\]"
 url_regex = "(?:https?:\/\/[^=]*)"
 separator_regex = "([\'|\"].*?[\'|\"])"
@@ -72,6 +75,28 @@ try:
             try:
                 js = open(f)
                 content = js.read()
+                
+                if len(content) > 100000: # new version. file contains library code to obfuscate
+                    clean_content = ""
+                    matches = re.findall(functions_regex, content, re.MULTILINE)
+                    for m in matches:
+                        clean_content += m + "\n"
+                        
+                    matches = re.findall(ext_code_regex, clean_content, re.MULTILINE)
+                    code_parts = dict()
+                    for m in matches:
+                        code_parts[m[0]] = m[1]
+                    
+                    matches = re.findall(code_order.replace("NUM_REP", str(len(code_parts)-1)), clean_content, re.MULTILINE)
+                    order = list()
+                    for m in matches:
+                        order = m.split("+")
+                        
+                    ordered_code = ""
+                    for element in order:
+                        ordered_code += code_parts[element]
+                    content = "'" + ordered_code + "'"
+                    
                 round = 0
                 while round < 2:
                     matches = re.findall(code_regex, content, re.MULTILINE)
@@ -79,8 +104,8 @@ try:
                     for m in matches:
                         if len(longest_match) < len(m):
                             longest_match = m
-
-                    content = decode_cipher(decode(encode(longest_match, 'latin-1', 'backslashreplace'), 'unicode-escape'))
+                    
+                    content = decode_cipher(decode(encode(longest_match, 'latin-1', 'backslashreplace'), 'unicode-escape')) #
                     round += 1
 
                 domains = re.findall(breacket_regex, content.split(";")[0], re.MULTILINE)
@@ -92,9 +117,13 @@ try:
                             for dom in d.replace("\"", "").replace("'", "").split(","):
                                 all_domains.add(dom)
                                 all_urls.add(urls[0].replace(replaceables[0], dom).replace(replaceables[1], "") + "=")
-
-                print("OK - " + str(f))
+                                
+                    print("OK - " + str(f))
+                else:
+                    print("NOK - " + str(f))
+                    
             except Exception as e:
+                print(e)
                 print("ERROR - Could not decode Gootloader - " + str(f))
 
         print("Found URLs: (" + str(len(all_urls)) + ")")
