@@ -47,7 +47,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 code_regex1 = r"(?<!\\)(?:\\\\)*'([^'\\]*(?:\\.[^'\\]*)*)'"
 code_regex2 = r"(?<!\\)(?:\\\\)*\"([^\"\\]*(?:\\.[^\"\\]*)*)\""
 regex_list = [code_regex1, code_regex2]
-url_regex = "(?i)(?:hxxps?:\/\/[^='\"]+)"
+url_regex = "(?i)(?:https?:\/\/[^='\"]+)"
 byte_regex = r"(?i)\[Byte\]\(?(0x[\dA-Fa-f]+)"
 add_regex = r"\d+\+\d+"
 char_regex = r"(?i)\[Char\]\(?([\dA-Fa-f]+)\)?"
