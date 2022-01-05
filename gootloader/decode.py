@@ -4,8 +4,8 @@
 # description       : Extracts URLs from Gootloader JavaScript
 # author            : @stoerchl
 # email             : patrick.schlapfer@hp.com
-# date              : 20211111
-# version           : 2.0
+# date              : 20220105
+# version           : 2.1
 # usage             : python decode.py -d <directory_to_search>
 # license           : MIT
 # py version        : 3.9.1
@@ -40,7 +40,7 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-functions_regex = r"^function[ \t]+\w+[ \t]*\([\w+, \t]*\)[ \t]*{.+}[ \t]*$"
+functions_regex = r"\w+\[\d{7}\]=\w+;\s*\w+=.+$"
 code_regex = r"(?<!\\)(?:\\\\)*'([^'\\]*(?:\\.[^'\\]*)*)'"
 ext_code_regex = r"(\w+)\s*=\s*(?<!\\)(?:\\\\)*'([^'\\]*(?:\\.[^'\\]*)*)'"
 code_order = r"\=\s*((?:\w+\+){NUM_REP}(?:\w+));"
@@ -81,7 +81,7 @@ try:
                     matches = re.findall(functions_regex, content, re.MULTILINE)
                     for m in matches:
                         clean_content += m + "\n"
-                        
+
                     matches = re.findall(ext_code_regex, clean_content, re.MULTILINE)
                     code_parts = dict()
                     for m in matches:
