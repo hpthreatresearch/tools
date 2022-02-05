@@ -108,6 +108,11 @@ try:
                     content = decode_cipher(decode(encode(longest_match, 'latin-1', 'backslashreplace'), 'unicode-escape')) #
                     round += 1
 
+                decoded_path = f.parent / ("decoded_" + f.name)
+                w = open(decoded_path,"a")
+                w.write(content)
+                w.close()
+                print("Wrote " + str(decoded_path))
                 domains = re.findall(breacket_regex, content.split(";")[0], re.MULTILINE)
                 urls = re.findall(url_regex, content, re.MULTILINE)
                 if len(urls) > 0:
