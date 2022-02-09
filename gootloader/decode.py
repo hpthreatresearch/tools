@@ -4,9 +4,9 @@
 # description       : Extracts URLs from Gootloader JavaScript
 # author            : @stoerchl
 # email             : patrick.schlapfer@hp.com
-# date              : 20220105
-# version           : 2.1
-# usage             : python decode.py -d <directory_to_search>
+# date              : 20220209
+# version           : 2.2
+# usage             : python decode.py -d <directory_to_search> [-r]
 # license           : MIT
 # py version        : 3.9.1
 #==============================================================================
@@ -63,14 +63,25 @@ def decode_cipher(cipher):
     return plaintext
 
 try:
-    opts, arg = getopt.getopt(all_args, 'd:')
-    if len(opts) != 1:
-        print ('usage: decode.py -d <directory_to_search>')
+    opts, arg = getopt.getopt(all_args, 'd:r')
+    if len(opts) < 1:
+        print ('usage: decode.py -d <directory_to_search> [-r]')
     else:
-        opt, arg_val = opts[0]
+        folder = None
+        dump_raw = False
+        for opt, arg_val in opts:
+            if opt == "-d":
+                folder = Path(arg_val)
+            elif opt == "-r":
+                dump_raw = True
+
+        if folder == None or not folder.is_dir():
+            print ('usage: decode.py -d <directory_to_search> [-r]')
+            sys.exit(2)
+
         all_domains = set()
         all_urls = set()
-        all_files = sorted(list(Path(arg_val).rglob("*")))
+        all_files = sorted(list(folder.rglob("*")))
         for f in all_files:
             try:
                 js = open(f)
@@ -108,11 +119,13 @@ try:
                     content = decode_cipher(decode(encode(longest_match, 'latin-1', 'backslashreplace'), 'unicode-escape')) #
                     round += 1
 
-                decoded_path = f.parent / ("decoded_" + f.name)
-                w = open(decoded_path,"a")
-                w.write(content)
-                w.close()
-                print("Wrote " + str(decoded_path))
+                if dump_raw:
+                    decoded_path = f.parent / ("decoded_" + f.name)
+                    w = open(decoded_path,"w")
+                    w.write(content)
+                    w.close()
+                    print("Wrote " + str(decoded_path))
+
                 domains = re.findall(breacket_regex, content.split(";")[0], re.MULTILINE)
                 urls = re.findall(url_regex, content, re.MULTILINE)
                 if len(urls) > 0:
@@ -146,5 +159,7 @@ try:
         print("> Wrote file: domains.txt")
 
 except getopt.GetoptError:
-    print ('usage: decode.py -d <directory_to_search>')
+    print ('usage: decode.py -d <directory_to_search> [-r]')
     sys.exit(2)
+except Exception as e:
+    print(e)
