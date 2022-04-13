@@ -4,8 +4,8 @@
 # description       : Extracts URLs from Gootloader JavaScript
 # author            : @stoerchl
 # email             : patrick.schlapfer@hp.com
-# date              : 20220209
-# version           : 2.2
+# date              : 20220413
+# version           : 2.3
 # usage             : python decode.py -d <directory_to_search> [-r]
 # license           : MIT
 # py version        : 3.9.1
@@ -47,6 +47,7 @@ code_order = r"\=\s*((?:\w+\+){NUM_REP}(?:\w+));"
 breacket_regex = "\[(.*?)\]"
 url_regex = "(?:https?:\/\/[^=]*)"
 separator_regex = "([\'|\"].*?[\'|\"])"
+array_replace_regex = "\w\[\w\]"
 
 all_args = sys.argv[1:]
 
@@ -138,7 +139,21 @@ try:
                                 
                     print("OK - " + str(f))
                 else:
-                    print("NOK - " + str(f))
+                    # New GootLoader Version 2022-04
+                    content = content.replace("\")+(\"", "").replace("\")+\"", "").replace("\"+(\"", "").replace("\")+", "").replace("+(\"", "")
+                    domains = re.findall(breacket_regex, content.split(";")[0], re.MULTILINE)
+                    urls = re.findall(url_regex, content, re.MULTILINE)
+                    if len(urls) > 0:
+                        replaceables = re.findall(array_replace_regex, urls[0], re.MULTILINE)
+                        if len(replaceables) > 0:
+                            for d in domains:
+                                for dom in d.replace("\"", "").replace("'", "").split(","):
+                                    all_domains.add(dom)
+                                    all_urls.add(urls[0].replace(replaceables[0], dom) + "=")
+
+                        print("OK - " + str(f))
+                    else:
+                        print("NOK - " + str(f))
                     
             except Exception as e:
                 print(e)
