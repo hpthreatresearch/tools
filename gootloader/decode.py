@@ -5,7 +5,7 @@
 # author            : @stoerchl
 # email             : patrick.schlapfer@hp.com
 # date              : 20220413
-# version           : 2.3
+# version           : 2.4
 # usage             : python decode.py -d <directory_to_search> [-r]
 # license           : MIT
 # py version        : 3.9.1
@@ -99,7 +99,7 @@ try:
                     for m in matches:
                         code_parts[m[0]] = m[1]
                     
-                    matches = re.findall(code_order.replace("NUM_REP", str(len(code_parts)-1)), clean_content, re.MULTILINE)
+                    matches = re.findall(code_order.replace("NUM_REP", str(len(code_parts)-1)), clean_content.replace(" ", ""), re.MULTILINE)
                     order = list()
                     for m in matches:
                         order = m.split("+")
