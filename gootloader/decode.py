@@ -4,8 +4,8 @@
 # description       : Extracts URLs from Gootloader JavaScript
 # author            : @stoerchl
 # email             : patrick.schlapfer@hp.com
-# date              : 20220413
-# version           : 2.4
+# date              : 20220502
+# version           : 2.5
 # usage             : python decode.py -d <directory_to_search> [-r]
 # license           : MIT
 # py version        : 3.9.1
@@ -44,6 +44,7 @@ functions_regex = r"\w+\[\d{7}\]=\w+;\s*\w+=.+$"
 code_regex = r"(?<!\\)(?:\\\\)*'([^'\\]*(?:\\.[^'\\]*)*)'"
 ext_code_regex = r"(\w+)\s*=\s*(?<!\\)(?:\\\\)*'([^'\\]*(?:\\.[^'\\]*)*)'"
 code_order = r"\=\s*((?:\w+\+){NUM_REP}(?:\w+));"
+re_code_order = r"(\w+\s*\=\s*(?:\w+\+)+(?:\w+));"
 breacket_regex = "\[(.*?)\]"
 url_regex = "(?:https?:\/\/[^=]*)"
 separator_regex = "([\'|\"].*?[\'|\"])"
@@ -101,8 +102,22 @@ try:
                     
                     matches = re.findall(code_order.replace("NUM_REP", str(len(code_parts)-1)), clean_content.replace(" ", ""), re.MULTILINE)
                     order = list()
-                    for m in matches:
-                        order = m.split("+")
+                    if len(matches) > 0:
+                        for m in matches:
+                            order = m.split("+")
+                    else:
+                        # New GootLoader Version 2022-05
+                        code_fragments = dict()
+                        result_element = ""
+                        matches = re.findall(re_code_order, clean_content.replace(" ", ""), re.MULTILINE)
+                        for expr in matches:
+                            stmt = expr.replace(" ", "").split("=")
+                            code_fragments[stmt[0]] = stmt[1].split("+")
+                            result_element = code_fragments[stmt[0]]
+                        
+                        for element in result_element:
+                            order += code_fragments[element]
+
                         
                     ordered_code = ""
                     for element in order:
