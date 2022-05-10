@@ -111,13 +111,14 @@ try:
                         clean_content = ""
                         matches = re.findall(functions_regex, content, re.MULTILINE)
                         for m in matches:
-                            clean_content += m + "\n"
+                            if len(m) > len(clean_content):
+                                clean_content = m
 
                         matches = re.findall(ext_code_regex, clean_content, re.MULTILINE)
                         code_parts = dict()
                         for m in matches:
                             code_parts[m[0]] = m[1]
-
+                        
                         matches = re.findall(code_order.replace("NUM_REP", str(len(code_parts)-1)), clean_content.replace(" ", ""), re.MULTILINE)
                         order = list()
                         if len(matches) > 0:
@@ -132,10 +133,10 @@ try:
                                 stmt = expr.replace(" ", "").split("=")
                                 code_fragments[stmt[0]] = stmt[1].split("+")
                                 result_element = code_fragments[stmt[0]]
+
                         
                             for element in result_element:
                                 order += code_fragments[element]
-
                         
                         ordered_code = ""
                         for element in order:
