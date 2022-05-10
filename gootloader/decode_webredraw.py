@@ -34,7 +34,7 @@ import getopt
 import sys
 from pathlib import Path
 
-html_regex = r"'(.*)';"
+html_regex = r"'(.*)'\s*;"
 url_regex = "(https?:\/\/[^\"]*)"
 
 all_args = sys.argv[1:]
@@ -67,9 +67,17 @@ try:
 
             all_files = sorted(list(folder.rglob("*")))
             for f in all_files:
+                content = None
                 try:
                     with open(f, encoding="utf16", errors='ignore') as infile:
                         content = infile.read()
+                except:
+                    pass # Reading with utf16 did not work.
+
+                try:
+                    if not content:
+                        with open(f, encoding="utf8", errors='ignore') as infile:
+                            content = infile.read()
 
                     code_content = None
                     match = re.findall(html_regex, content.replace("\'+\'", ""), re.MULTILINE)

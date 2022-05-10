@@ -50,11 +50,11 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-functions_regex = r"\w+\[\d{7}\]=\w+;\s*\w+=.+$"
+functions_regex = r"\w+\[\d{7}\]=\w+;(?:\s*\w+=\d+;)?\s*.*$"
 code_regex = r"(?<!\\)(?:\\\\)*'([^'\\]*(?:\\.[^'\\]*)*)'"
 ext_code_regex = r"(\w+)\s*=\s*(?<!\\)(?:\\\\)*'([^'\\]*(?:\\.[^'\\]*)*)'"
 code_order = r"\=\s*((?:\w+\+){NUM_REP}(?:\w+));"
-re_code_order = r"(\w+\s*\=\s*(?:\w+\+)+(?:\w+));"
+re_code_order = r"(\w+\s*\=\s*(?:\w+\+?)+(?:\w+));"
 breacket_regex = "\[(.*?)\]"
 url_regex = "(?:https?:\/\/[^=]*)"
 separator_regex = "([\'|\"].*?[\'|\"])"
@@ -117,7 +117,7 @@ try:
                         code_parts = dict()
                         for m in matches:
                             code_parts[m[0]] = m[1]
-                    
+
                         matches = re.findall(code_order.replace("NUM_REP", str(len(code_parts)-1)), clean_content.replace(" ", ""), re.MULTILINE)
                         order = list()
                         if len(matches) > 0:
