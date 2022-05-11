@@ -50,7 +50,7 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-functions_regex = r"\w+\[\d{7}\]=\w+;(?:\s*\w+=\d+;)?\s*.*$"
+functions_regex = r".*\s*\w+\[\d{7}\]=\w+;(?:\s*\w+=\d+;)?\s*.*$"
 code_regex = r"(?<!\\)(?:\\\\)*'([^'\\]*(?:\\.[^'\\]*)*)'"
 ext_code_regex = r"(\w+)\s*=\s*(?<!\\)(?:\\\\)*'([^'\\]*(?:\\.[^'\\]*)*)'"
 code_order = r"\=\s*((?:\w+\+){NUM_REP}(?:\w+));"
