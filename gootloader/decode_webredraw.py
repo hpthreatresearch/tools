@@ -34,7 +34,7 @@ import getopt
 import sys
 from pathlib import Path
 
-html_regex = r"'(.*)'\s*\)?\s*;"
+html_regex = r"'(.*)'\s*\)?\s*"
 url_regex = "(https?:\/\/[^\"]*)"
 
 all_args = sys.argv[1:]
