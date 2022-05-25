@@ -79,10 +79,12 @@ try:
                         with open(f, encoding="utf8", errors='ignore') as infile:
                             content = infile.read()
 
-                    code_content = None
+                    code_content = ""
                     match = re.findall(html_regex, content.replace("\'+\'", ""), re.MULTILINE)
                     if len(match) > 0:
-                        code_content = decode_cipher(match[0])
+                        for m in match:
+                            if len(m) > len(code_content):
+                                code_content = decode_cipher(m)
 
                     if code_content:
                         urls = re.findall(url_regex, code_content, re.MULTILINE)
