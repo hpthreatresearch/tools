@@ -36,6 +36,8 @@ from pathlib import Path
 
 html_regex = r"'(.*)'\s*\)?\s*"
 url_regex = "(https?:\/\/[^\"]*)"
+var_regex = r"(?:\';)?\w+\s*\=\s*\'"
+code_order = r"\=\s*((?:\w+\+){NUM_REP}(?:\w+));"
 
 all_args = sys.argv[1:]
 
@@ -82,9 +84,28 @@ try:
                     code_content = ""
                     match = re.findall(html_regex, content.replace("\'+\'", ""), re.MULTILINE)
                     if len(match) > 0:
-                        for m in match:
-                            if len(m) > len(code_content):
-                                code_content = decode_cipher(m)
+                        if len(match) == 1:
+                            vars = re.findall(var_regex, content)
+                            parts = dict()
+                            code_parts = re.split(var_regex, match[0])
+                            counter = 0
+                            for x in vars:
+                                parts[re.sub(r"\'|=|;", "", x)] = re.split(var_regex, match[0])[counter]
+                                counter += 1
+
+                            clean_match = ""
+                            combination = re.findall(code_order.replace("NUM_REP", str(len(vars)-1)), content, re.MULTILINE)
+                            if len(combination) > 0:
+                                code_comb = combination[0].split("+")
+                                for q in code_comb:
+                                    clean_match += parts[q]
+
+                            code_content = decode_cipher(clean_match)
+
+                        else:
+                            for m in match:
+                                if len(m) > len(code_content):
+                                    code_content = decode_cipher(m)
 
                     if code_content:
                         urls = re.findall(url_regex, code_content, re.MULTILINE)
