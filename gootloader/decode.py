@@ -4,8 +4,8 @@
 # description       : Extracts URLs from Gootloader JavaScript
 # author            : @stoerchl
 # email             : patrick.schlapfer@hp.com
-# date              : 20220504
-# version           : 2.6
+# date              : 20221007
+# version           : 2.7
 # usage             : decode.py -d <directory_to_search> [-o <output_directory>] [-r]
 # license           : MIT
 # py version        : 3.9.1
@@ -60,6 +60,10 @@ url_regex = "(?:https?:\/\/[^=]*)"
 separator_regex = "([\'|\"].*?[\'|\"])"
 array_replace_regex = "\w\[\w\]"
 
+var_regex = r"(\w+)\=\'(.*)\';$"
+func_regex = r"^(\w+)\s*\=\s*((?:\w+\+){1,}\w+);"
+
+
 all_args = sys.argv[1:]
 
 def decode_cipher(cipher):
@@ -106,7 +110,8 @@ try:
                 if f.is_file():
                     js = open(f)
                     content = js.read()
-                
+                    
+                    num_rounds = 2
                     if len(content) > 100000: # new version. file contains library code to obfuscate
                         clean_content = ""
                         matches = re.findall(functions_regex, content, re.MULTILINE)
@@ -143,14 +148,59 @@ try:
                             ordered_code += code_parts[element]
                         content = "'" + ordered_code + "'"
                     
+                    elif len(content) > 30000:
+                        # New GootLoader Version 2022-10
+                        num_rounds = 1
+
+                        variables = dict()
+                        functions = dict()
+
+                        matches = re.findall(var_regex, content, re.MULTILINE)
+                        for m in matches:
+                            variables[m[0]] = m[1]
+
+                        matches = re.findall(func_regex, content, re.MULTILINE)
+                        for m in matches:
+                            functions[m[0]] = m[1]
+
+                        resolved_functions = dict()
+                        for fx in functions:
+                            resolved_functions[fx] = ""
+                            var_list = functions[fx].split("+")
+                            for v in var_list:
+                                if v.strip() in variables:
+                                    resolved_functions[fx] += variables[v.strip()]
+
+                        real_concat = dict()
+                        for k in functions:
+                            matches = re.search("^.*" + str(k) + ".*;$", content, re.MULTILINE)
+                            if matches.group() not in real_concat:
+                                real_concat[matches.group()] = 0
+                            real_concat[matches.group()] += 1
+                        
+                        real_con = ""
+                        len_con = 0
+                        for x in real_concat:
+                            if real_concat[x] > len_con:
+                                real_con = x
+                        real_con = real_con.replace("\t", "").replace(";", "")
+                        real_con = real_con.split("=")[1:][0].strip()
+
+                        x = ""
+                        for v in real_con.split("+"):
+                            if v.strip() in resolved_functions:
+                                x += resolved_functions[v.strip()]
+                        
+                        content = decode_cipher(decode(encode(x, 'latin-1', 'backslashreplace'), 'unicode-escape')) 
+
                     round = 0
-                    while round < 2:
+                    while round < num_rounds:
                         matches = re.findall(code_regex, content, re.MULTILINE)
                         longest_match = ""
                         for m in matches:
                             if len(longest_match) < len(m):
                                 longest_match = m
-                    
+
                         content = decode_cipher(decode(encode(longest_match, 'latin-1', 'backslashreplace'), 'unicode-escape')) #
                         round += 1
 
@@ -160,8 +210,14 @@ try:
                         w.write(content)
                         w.close()
                         print("Wrote " + str(decoded_path))
+                    
 
-                    domains = re.findall(breacket_regex, content.split(";")[0], re.MULTILINE)
+                    content = content.replace("\")+(\"", "").replace("\"+\"", "")
+                    for t in range(0,3):
+                        domains = re.findall(breacket_regex, content.split(";")[t], re.MULTILINE)
+                        if len(domains) > 0:
+                            break
+
                     urls = re.findall(url_regex, content, re.MULTILINE)
                     if len(urls) > 0:
                         replaceables = re.findall(separator_regex, urls[0], re.MULTILINE)
@@ -190,7 +246,6 @@ try:
                             print("NOK - " + str(f))
                     
             except Exception as e:
-                print(e)
                 print("ERROR - Could not decode Gootloader - " + str(f))
 
         print("Found URLs: (" + str(len(all_urls)) + ")")
