@@ -4,8 +4,8 @@
 # description       : Extracts URLs from website redraw script
 # author            : @stoerchl
 # email             : patrick.schlapfer@hp.com
-# date              : 20220505
-# version           : 1.0
+# date              : 20221010
+# version           : 1.1
 # usage             : decode_webredraw.py -d <directory_to_search>
 # license           : MIT
 # py version        : 3.9.1
@@ -86,19 +86,32 @@ try:
                     if len(match) > 0:
                         if len(match) == 1:
                             vars = re.findall(var_regex, content)
-                            parts = dict()
-                            code_parts = re.split(var_regex, match[0])
-                            counter = 0
-                            for x in vars:
-                                parts[re.sub(r"\'|=|;", "", x)] = re.split(var_regex, match[0])[counter]
-                                counter += 1
 
+                            parts = dict()
                             clean_match = ""
-                            combination = re.findall(code_order.replace("NUM_REP", str(len(vars)-1)), content, re.MULTILINE)
-                            if len(combination) > 0:
-                                code_comb = combination[0].split("+")
-                                for q in code_comb:
-                                    clean_match += parts[q]
+                            code_parts = re.split(var_regex, match[0])
+
+                            if len(code_parts) == 1:
+                                clean_match = code_parts[0]
+
+                            elif len(code_parts) > 1:
+                                counter = 0
+                                for x in vars:
+                                    parts[re.sub(r"\'|=|;", "", x)] = re.split(var_regex, match[0])[counter]
+                                    counter += 1
+
+                                clean_match = ""
+
+                                counter = 1
+                                combination = list()
+                                while len(combination) == 0 and counter < len(vars):
+                                    combination = re.findall(code_order.replace("NUM_REP", str(len(vars)-counter)), content, re.MULTILINE)
+                                    counter += 1
+
+                                if len(combination) > 0:
+                                    code_comb = combination[0].split("+")
+                                    for q in code_comb:
+                                        clean_match += parts[q]
 
                             code_content = decode_cipher(clean_match)
 
@@ -112,7 +125,7 @@ try:
                         all_urls.update(urls)
 
                     print("OK - " + str(f))
-                except:
+                except Exception as e:
                     print("NOK - " + str(f))
                 
             print("Found URLs: (" + str(len(all_urls)) + ")")
